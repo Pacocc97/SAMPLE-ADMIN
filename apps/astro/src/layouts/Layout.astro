@@ -1,0 +1,59 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import Footer from "../components/Footer.astro";
+import NavBar from "../components/NavBar.astro";
+import "../styles/style.css";
+
+const { title, description } = Astro.props;
+---
+
+<html lang="es">
+  <head>
+    <BaseHead title={title} description={description} />
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
+    <!-- <script>
+      import "../swup";
+    </script> -->
+    <script
+      type="text/javascript"
+      src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"
+    ></script>
+    <script type="text/javascript" src="https://js.openpay.mx/openpay.v1.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://js.openpay.mx/openpay-data.v1.min.js"
+    ></script>
+  </head>
+  <body id="page_body" class="mx-auto flex flex-col h-screen">
+    <header>
+      <NavBar />
+    </header>
+    <!-- id="swup" -->
+    <main class="transition-fade">
+      <slot />
+    </main>
+    <Footer />
+
+    <!-- <script
+      is:inline
+      src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"
+    ></script> -->
+    <!-- Import Swup as ESM -->
+
+    <!-- <script type="module">
+      import Swup from "https://unpkg.com/swup@3?module";
+
+      const swup = new Swup({
+        animateHistoryBrowsing: true,
+      });
+    </script> -->
+
+    <!-- Import Swup as UMD for older browsers -->
+
+    <!-- <script nomodule src="https://unpkg.com/swup@3"></script>
+    <script nomodule>
+      const swup = new Swup();
+    </script> -->
+  </body>
+</html>

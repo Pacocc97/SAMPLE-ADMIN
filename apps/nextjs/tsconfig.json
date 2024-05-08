@@ -1,0 +1,19 @@
+{
+  "extends": "@acme/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"],
+      "@layouts/*": ["./src/components/layouts/*"]
+    }
+  },
+  "exclude": [],
+  "include": [
+    ".eslintrc.cjs",
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.cjs",
+    "**/*.mjs"
+  ]
+}

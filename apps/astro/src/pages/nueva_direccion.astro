@@ -1,0 +1,33 @@
+---
+import { getSession } from "auth-astro/server";
+
+import { apiPublic } from "~/utils/api";
+import ClientAddresses from "~/components/ClientAddresses";
+import AddressFormComponent from "~/components/forms/AddressForm";
+import Layout from "~/layouts/Layout.astro";
+
+let session = await getSession(Astro.request);
+if (!session) {
+  Astro.redirect("/");
+}
+
+export const prerender = true; //DIRECCIÓN NO SEGURA
+---
+
+<Layout title="Nueva dirección">
+  <div
+    class="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8"
+  >
+    <div>
+      <h2 class="text-base font-semibold leading-7 text-black">
+        Dirección nueva
+      </h2>
+      <p class="mt-1 text-sm leading-6 text-gray-600">
+        Agregue una dirección nueva a su lista de direcciones.
+      </p>
+    </div>
+    <div class="md:col-span-2">
+      <AddressFormComponent typeForm="create" user={session} client:load />
+    </div>
+  </div>
+</Layout>

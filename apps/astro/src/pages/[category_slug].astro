@@ -1,0 +1,50 @@
+---
+import { getSession } from "auth-astro/server";
+
+import type { Category, Image, Product } from "@acme/db";
+
+import { api } from "~/utils/api";
+import FilteredCategory from "~/components/products/FilteredCategory";
+import Layout from "~/layouts/Layout.astro";
+
+const session = await getSession(Astro.request);
+const userData = await api.users.show.query({
+  email: session?.user?.email || undefined,
+});
+
+type MyCategory = Category & { Product: (Product & { image: Image })[] };
+
+export async function getStaticPaths() {
+  const categories = await api.category.all.query();
+
+  return categories.map((category) => {
+    return {
+      params: { category_slug: category.slug },
+      props: { category },
+    };
+  });
+}
+const { category_slug } = Astro.params;
+const data = (await api.category.show.query({
+  slug: category_slug ?? "",
+})) as MyCategory;
+export const prerender = true;
+---
+
+<Layout title="Categoría">
+  <div>
+    <!--
+        Mobile filter dialog
+  
+        Off-canvas menu for mobile, show/hide based on off-canvas menu state.
+      -->
+
+    <FilteredCategory
+      discount={(userData?.role?.discount || 0) / 10000}
+      categories={data}
+      client:load
+    />
+
+    <!-- Filters -->
+  </div>
+</Layout>

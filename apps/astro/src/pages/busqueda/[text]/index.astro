@@ -1,0 +1,22 @@
+---
+import { getSession } from "auth-astro/server";
+
+import { api } from "~/utils/api";
+import SearchPage from "~/components/SearchPage";
+import Layout from "~/layouts/Layout.astro";
+
+const session = await getSession(Astro.request);
+const userData = await api.users.show.query({
+  email: session?.user?.email || undefined,
+});
+
+const text = Astro.params.text;
+---
+
+<Layout title="Búsqueda">
+  <SearchPage
+    discount={(userData?.role?.discount || 0) / 10000}
+    text={text}
+    client:load
+  />
+</Layout>

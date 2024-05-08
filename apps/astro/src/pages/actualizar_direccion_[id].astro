@@ -1,0 +1,41 @@
+---
+import { getSession } from "auth-astro/server";
+
+import { api } from "~/utils/api";
+import ClientAddresses from "~/components/ClientAddresses";
+import AddressFormComponent from "~/components/forms/AddressForm";
+import Layout from "~/layouts/Layout.astro";
+
+let session = await getSession(Astro.request);
+if (!session) {
+  Astro.redirect("/");
+}
+
+const { id } = Astro.params;
+const data = await api.address.show.query({ id: id || "" });
+
+export const prerender = true;
+---
+
+<Layout title="Actualizar dirección">
+  <div
+    class="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8"
+  >
+    <div>
+      <h2 class="text-base font-semibold leading-7 text-black">
+        Dirección {data?.identifier}
+      </h2>
+      <p class="mt-1 text-sm leading-6 text-gray-600">
+        Actualice la información de la dirección de {data?.identifier}.
+      </p>
+    </div>
+    <div class="md:col-span-2">
+      <AddressFormComponent
+        typeForm="update"
+        user={session}
+        defaultAddress={data}
+        client:load
+      />
+    </div>
+  </div>
+</Layout>

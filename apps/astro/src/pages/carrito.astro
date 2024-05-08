@@ -1,0 +1,82 @@
+---
+import { getSession } from "auth-astro/server";
+
+import { api } from "~/utils/api";
+import { CartProducts } from "~/components/Cart/CartProducts";
+import CartSummary from "~/components/Cart/CartSummary";
+import Layout from "~/layouts/Layout.astro";
+
+const session = await getSession(Astro.request);
+const userData = await api.users.show.query({
+  email: session?.user?.email || undefined,
+});
+
+export const prerender = true;
+---
+
+<Layout title="ICB | Carrito">
+  <div class="bg-white">
+    <div
+      class="mx-auto max-w-2xl px-4 pb-24 pt-16 sm:px-6 lg:max-w-7xl lg:px-8"
+    >
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+        Carrito de compras
+      </h1>
+      <form
+        class="mt-12 lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16"
+      >
+        <section aria-labelledby="cart-heading" class="lg:col-span-7">
+          <h2 id="cart-heading" class="sr-only">Artículos en tu carrito</h2>
+          <ul
+            role="list"
+            class="divide-y divide-gray-200 border-b border-t border-gray-200"
+          >
+            <CartProducts
+              discount={(userData?.role?.discount || 0) / 10000}
+              client:load
+            />
+          </ul>
+        </section>
+
+        <!-- Order summary -->
+        <section
+          aria-labelledby="summary-heading"
+          class="mt-16 rounded-lg bg-gray-50 px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8"
+        >
+          <h2 id="summary-heading" class="text-lg font-medium text-gray-900">
+            Resumen de orden
+          </h2>
+          <CartSummary
+            discount={(userData?.role?.discount || 0) / 10000}
+            client:load
+          />
+
+          <div class="mt-6">
+            <a href="/pago">
+              <div
+                class="block w-full text-center rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50"
+              >
+                Comprar
+              </div>
+            </a>
+          </div>
+          <div class="mt-6">
+            <p id="rangeValue" class="sr-only"></p>
+            <button
+              id="pdfButton"
+              class="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50"
+              >Descargar cotización</button
+            >
+          </div>
+        </section>
+      </form>
+    </div>
+  </div>
+</Layout>
+<script src="~/ts/pdfCreator.ts"></script>
+<script>
+  const buttonElement = document.getElementById("pdfButton");
+  if (buttonElement === null) {
+    window.location.reload();
+  }
+</script>

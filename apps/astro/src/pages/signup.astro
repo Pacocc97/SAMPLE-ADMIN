@@ -1,0 +1,207 @@
+---
+import type { Session } from "@auth/core/types";
+import { Auth, SignIn, SignOut } from "auth-astro/components";
+
+import "~/styles/style.css";
+import Layout from "~/layouts/Layout.astro";
+
+export const prerender = true;
+---
+
+<Layout title="signin">
+  <Auth>
+    {
+      (session: Session) => {
+        if (session) {
+          return (
+            <>
+              <p>Logged in as {session.user?.name}</p>
+              <SignOut>Sign Out</SignOut>
+            </>
+          );
+        } else if (!session) {
+          return (
+            <>
+              <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+                <div class="sm:mx-auto sm:w-full sm:max-w-md">
+                  <img
+                    class="mx-auto h-10 w-auto"
+                    src="/public/images/Logo-cubo-ICB-150x150px.png"
+                    alt="Your Company"
+                  />
+                  <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+                    Registrarse
+                  </h2>
+                </div>
+
+                <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+                  <div class="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+                    <form class="space-y-6" action="#" method="POST">
+                      <div>
+                        <label
+                          for="email"
+                          class="block text-sm font-medium leading-6 text-gray-900"
+                        >
+                          Correo electrónico
+                        </label>
+                        <div class="mt-2">
+                          <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            autocomplete="email"
+                            required
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label
+                          for="name"
+                          class="block text-sm font-medium leading-6 text-gray-900"
+                        >
+                          Nombre completo
+                        </label>
+                        <div class="mt-2">
+                          <input
+                            id="name"
+                            name="name"
+                            type="text"
+                            autocomplete="name"
+                            required
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label
+                          for="password"
+                          class="block text-sm font-medium leading-6 text-gray-900"
+                        >
+                          Contraseña
+                        </label>
+                        <div class="mt-2">
+                          <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            required
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                          />
+                        </div>
+                      </div>
+
+                      {/*                 <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                          <input
+                            id="remember-me"
+                            name="remember-me"
+                            disabled
+                            type="checkbox"
+                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                          />
+                          <label
+                            for="remember-me"
+                            class="ml-3 block text-sm leading-6 text-gray-900"
+                          >
+                            Recordarme
+                          </label>
+                        </div>
+
+                        <div class="text-sm leading-6">
+                          <a
+                            href="#"
+                            class="font-semibold text-indigo-600 hover:text-indigo-500"
+                          >
+                            Olvidó su contraseña?
+                          </a>
+                        </div>
+                      </div>*/}
+
+                      <div>
+                        <button
+                          id="signup"
+                          type="button"
+                          class="shadow-sm-500 flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                        >
+                          Registrarse
+                        </button>
+                      </div>
+                    </form>
+
+                    <div>
+                      <div class="relative mt-10">
+                        <div
+                          class="absolute inset-0 flex items-center"
+                          aria-hidden="true"
+                        >
+                          <div class="w-full border-t border-gray-200" />
+                        </div>
+                        <div class="relative flex justify-center text-sm font-medium leading-6">
+                          <span class="bg-white px-6 text-gray-900">
+                            O igresar con
+                          </span>
+                        </div>
+                      </div>
+                      <div class="mt-6 grid">
+                        <SignIn class="login-with-google-btn" provider="google">
+                          Google
+                        </SignIn>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p class="mt-10 text-center text-sm text-gray-500">
+                    Ya tiene cuenta?
+                    <a
+                      href="/signin"
+                      class="font-semibold leading-6 text-indigo-600 hover:text-indigo-500"
+                    >
+                      Ingresar
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </>
+          );
+        } else {
+          return;
+        }
+      }
+    }
+  </Auth>
+  <script>
+    import { Toast } from "~/utils/alerts";
+    import { apiPublic } from "~/utils/api";
+
+    const { signIn, signOut } = await import("auth-astro/client");
+    const emailInput = document.getElementById("email");
+    const nameInput = document.getElementById("name");
+    const passwordInput = document.getElementById("password");
+
+    document.querySelector("#signup").onclick = async () =>
+      await apiPublic.users.register
+        .mutate({
+          email: emailInput.value,
+          name: nameInput.value,
+          password: passwordInput.value,
+        })
+        .then(async (res) => {
+          console.log(res, "res");
+          await signIn("credentials", {
+            username: emailInput.value,
+            password: passwordInput.value,
+            // redirect: false,
+          });
+        })
+        .catch((err) => {
+          Toast.fire({
+            title: err.message,
+            icon: "error",
+          });
+        });
+  </script>
+</Layout>

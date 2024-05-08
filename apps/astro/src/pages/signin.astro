@@ -1,0 +1,216 @@
+---
+import type { Session } from "@auth/core/types";
+import { Auth, SignIn, SignOut } from "auth-astro/components";
+
+import "~/styles/style.css";
+import Layout from "~/layouts/Layout.astro";
+
+export const prerender = true;
+---
+
+<Layout title="signin">
+  <Auth>
+    {
+      (session: Session) => {
+        if (session) {
+          return (
+            <>
+              <p>Logged in as {session.user?.name}</p>
+              <SignOut>Sign Out</SignOut>
+            </>
+          );
+        } else if (!session) {
+          return (
+            <>
+              <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+                <div class="sm:mx-auto sm:w-full sm:max-w-md">
+                  <img
+                    class="mx-auto h-10 w-auto"
+                    src="/public/images/Logo-cubo-ICB-150x150px.png"
+                    alt="Your Company"
+                  />
+                  <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+                    Ingrese a su cuenta
+                  </h2>
+                </div>
+
+                <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+                  <div class="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+                    <form class="space-y-6" action="#" method="POST">
+                      <div>
+                        <label
+                          for="email"
+                          class="block text-sm font-medium leading-6 text-gray-900"
+                        >
+                          Correo electrónico
+                        </label>
+                        <div class="mt-2">
+                          <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            autocomplete="email"
+                            required
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label
+                          for="password"
+                          class="block text-sm font-medium leading-6 text-gray-900"
+                        >
+                          Contraseña
+                        </label>
+                        <div class="mt-2">
+                          <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            required
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                          />
+                        </div>
+                      </div>
+                      <div id="errorSignin" />
+
+                      <div>
+                        <button
+                          id="login"
+                          type="button"
+                          class="shadow-sm-500 flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                        >
+                          Ingresar
+                        </button>
+                      </div>
+                    </form>
+
+                    <div>
+                      <div class="relative mt-10">
+                        <div
+                          class="absolute inset-0 flex items-center"
+                          aria-hidden="true"
+                        >
+                          <div class="w-full border-t border-gray-200" />
+                        </div>
+                        <div class="relative flex justify-center text-sm font-medium leading-6">
+                          <span class="bg-white px-6 text-gray-900">
+                            O igresar con
+                          </span>
+                        </div>
+                      </div>
+                      <div class="mt-6 grid">
+                        <SignIn class="login-with-google-btn" provider="google">
+                          Google
+                        </SignIn>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p class="mt-10 text-center text-sm text-gray-500">
+                    No está registrado?
+                    <a
+                      href="/signup"
+                      class="font-semibold leading-6 text-indigo-600 hover:text-indigo-500"
+                    >
+                      Registrarse
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </>
+          );
+        } else {
+          return;
+        }
+      }
+    }
+  </Auth>
+  <script>
+    import { apiPublic } from "~/utils/api";
+
+    const { signIn, signOut } = await import("auth-astro/client");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    // Get the URL query string
+    const queryString = window.location.search;
+
+    // Parse the query string into an object
+    const queryParams = new URLSearchParams(queryString);
+
+    // Get the value of the "callbackUrl" parameter
+    const callbackUrl = queryParams.get("callbackUrl");
+
+    // Use the value or provide a default value if it's not present
+    const finalCallbackUrl = callbackUrl || "/";
+    document.querySelector("#login").onclick = async () => {
+      // Clear existing error messages
+      const errorContainer = document.getElementById("errorSignin");
+      errorContainer.innerHTML = ""; // Clear all previous error messages
+
+      const credentials = {
+        username: emailInput.value,
+        password: passwordInput.value,
+      };
+
+      await apiPublic.auth.signin
+        .mutate(credentials)
+        .then(async (value) => {
+          if (value.name === "Error") {
+            // Add new error message
+            const newDiv = createErrorDiv(
+              "Error al iniciar sesión",
+              value.message,
+            );
+            errorContainer.appendChild(newDiv);
+          } else {
+            await signIn("credentials", {
+              username: emailInput.value,
+              password: passwordInput.value,
+              redirect: false,
+              callbackUrl: finalCallbackUrl,
+            });
+          }
+        })
+        .catch((error) => {
+          // Add new error message
+          const newDiv = createErrorDiv(
+            "Error al iniciar sesión",
+            error.message,
+          );
+          errorContainer.appendChild(newDiv);
+        });
+    };
+
+    function createErrorDiv(title, message) {
+      const errorDiv = document.createElement("div");
+      errorDiv.innerHTML = `
+    <div class="rounded-md bg-red-50 p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg
+            class="h-5 w-5 text-red-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+          <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                    clip-rule="evenodd"
+                  />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">${title}</h3>
+          <div class="mt-2 text-sm text-red-700">${message}</div>
+        </div>
+      </div>
+    </div>
+  `;
+      return errorDiv;
+    }
+  </script>
+</Layout>

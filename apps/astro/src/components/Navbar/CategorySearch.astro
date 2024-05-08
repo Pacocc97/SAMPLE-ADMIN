@@ -1,0 +1,96 @@
+---
+import type { Category } from "@acme/db";
+
+import { api } from "~/utils/api";
+import { SubCategories } from "./SubCategories";
+
+type CategoryArray = Array<
+  Array<
+    Category & {
+      child: Category[];
+    }
+  >
+>;
+
+const categories = (await api.category.sectioned.query()) as CategoryArray;
+---
+
+<header class="relative bg-white">
+  <nav aria-label="Top" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center">
+      <!-- Mobile menu toggle, controls the 'mobileMenuOpen' state. -->
+
+      <!-- Flyout menus -->
+      <div class="hidden lg:ml-8 lg:block lg:self-stretch">
+        <div class="flex h-full space-x-8">
+          <div class="flex">
+            <div class="absolute top-full z-20 text-sm text-gray-500">
+              <!-- Presentational element used to render the bottom shadow, if we put the shadow on the actual panel it pokes out the top, so we use this shorter element to hide the top of the shadow -->
+              <div class="absolute inset-0 bg-white shadow" aria-hidden="true">
+              </div>
+
+              <div class="relative bg-white">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                  <div class="mt-1 bg-white shadow-sm dark:bg-gray-800">
+                    <div
+                      class={`grid max-w-screen-xl px-4 py-5 mx-auto text-sm text-gray-500 dark:text-gray-400 md:grid-cols-4  md:px-6`}
+                    >
+                      {
+                        categories.map((categoryArr) => (
+                          <ul
+                            class="mb-4 hidden space-y-4 md:mb-0 md:block"
+                            aria-labelledby="mega-menu-full-image-button"
+                          >
+                            {categoryArr.map((cat) => (
+                              <li>
+                                <SubCategories category={cat} client:load />
+                              </li>
+                            ))}
+                          </ul>
+                        ))
+                      }
+                      <a href="#" class="aspect-square border rounded-lg">
+                        <img
+                          src={`https://icb.mx/wp-content/uploads/2023/04/Centrifuga-FUGE-II-24x10ml-Ofertas-Abril-2023-600x600-px-400x400.jpg`}
+                          alt="Eight shirts arranged on table in black, olive, grey, blue, white, red, mustard, and green."
+                          class="h-full w-full object-contain object-center p-2 sm:h-full sm:w-full"
+                        />
+                      </a>
+                      <!-- <a
+                        href="#"
+                        class="p-8 text-left aspect-square bg-local border bg-center bg-no-repeat bg-cover rounded-lg bg-blend-multiply hover:bg-blend-soft-light dark:hover:bg-blend-darken"
+                        style="background-image: url(https://icb.mx/wp-content/uploads/2023/04/Centrifuga-FUGE-II-24x10ml-Ofertas-Abril-2023-600x600-px-400x400.jpg)"
+                      >
+                        <p
+                          class="max-w-xl mb-5 font-extrabold leading-tight tracking-tight text-white"
+                        >
+                          Preview the new Flowbite dashboard navigation.
+                        </p>
+                        <button
+                          type="button"
+                          class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-center text-white border border-white rounded-lg hover:bg-white hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-gray-700"
+                        >
+                          Get started
+                          <svg
+                            class="w-4 h-4 ml-1 -mr-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg"
+                            ><path
+                              fill-rule="evenodd"
+                              d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+                              clip-rule="evenodd"></path></svg
+                          >
+                        </button>
+                      </a> -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>

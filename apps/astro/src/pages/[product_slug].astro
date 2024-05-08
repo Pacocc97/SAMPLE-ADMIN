@@ -1,0 +1,468 @@
+---
+import { api } from "~/utils/api";
+// import AddToCartForm from '../../components/AddToCartForm';
+import "~/styles/description.css";
+import { getSession } from "auth-astro/server";
+
+import type { Gif, Image, ImagesExtra, Pdf, Product } from "@acme/db";
+
+import AddToCartForm from "~/components/AddToCartForm";
+import { ComplementProduct } from "~/components/ComplementProduct";
+import { Images } from "~/components/Images";
+import { PartsProduct } from "~/components/products/PartsProduct";
+import Layout from "~/layouts/Layout.astro";
+import { ProductInfo } from "../components/ProductInfo";
+
+const session = await getSession(Astro.request);
+
+type MyProduct = Product & {
+  manual: Pdf;
+  brochure: Pdf;
+  image: Image;
+  Gif: Gif;
+  parts: (Product & {
+    image: Image;
+  })[];
+  ImagesExtra: (ImagesExtra & {
+    image: Image;
+  })[];
+};
+const userData = await api.users.show.query({
+  email: session?.user?.email || undefined,
+});
+
+export async function getStaticPaths() {
+  const data = await api.product.allAstro.query();
+  // const data = await api.product.all.query();
+
+  return data?.map((product) => {
+    return {
+      params: { product_slug: product.slug },
+      props: { product },
+    };
+  });
+}
+
+const { product_slug } = Astro.params;
+const data = await api.product.show.query({
+  slug: product_slug ?? "",
+});
+export const prerender = true;
+---
+
+<Layout title={data?.name} description="Página de inicio">
+  <div class="border-b border-gray-200">
+    <nav aria-label="Breadcrumb" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <ol role="list" class="flex items-center space-x-4 py-4">
+        <li>
+          <div class="flex items-center">
+            <a href="/" class="mr-4 text-sm font-medium text-gray-900">Inicio</a
+            >
+            <svg
+              viewBox="0 0 6 20"
+              aria-hidden="true"
+              class="h-5 w-auto text-gray-300"
+            >
+              <path
+                d="M4.878 4.34H3.551L.27 16.532h1.327l3.281-12.19z"
+                fill="currentColor"></path>
+            </svg>
+          </div>
+        </li>
+
+        <li>
+          <div class="flex items-center">
+            <a
+              href="/equipos-de-laboratorio"
+              class="mr-4 text-sm font-medium text-gray-900"
+              >Equipo de laboratorio</a
+            >
+            <svg
+              viewBox="0 0 6 20"
+              aria-hidden="true"
+              class="h-5 w-auto text-gray-300"
+            >
+              <path
+                d="M4.878 4.34H3.551L.27 16.532h1.327l3.281-12.19z"
+                fill="currentColor"></path>
+            </svg>
+          </div>
+        </li>
+
+        <li class="text-sm">
+          <span
+            aria-current="page"
+            class="font-medium cursor-default text-gray-500 hover:text-gray-600"
+            >{data?.name}</span
+          >
+        </li>
+      </ol>
+    </nav>
+  </div>
+
+  <section class="pb-6 px-10 flex justify-center max-w-[2000px] sm:pb-8">
+    <div>
+      <!-- <nav aria-label="Breadcrumb" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <ol role="list" class="flex items-center space-x-4 py-4">
+            <li>
+              <div class="flex items-center">
+                <a href="/" class="mr-4 text-sm font-medium text-gray-900">Inicio</a>
+                <svg viewBox="0 0 6 20" aria-hidden="true" class="h-5 w-auto text-gray-300">
+                  <path d="M4.878 4.34H3.551L.27 16.532h1.327l3.281-12.19z" fill="currentColor" />
+                </svg>
+              </div>
+            </li>
+            <li>
+              <div class="flex items-center">
+                <a href="/products" class="mr-4 text-sm font-medium text-gray-900">Productos</a>
+                <svg viewBox="0 0 6 20" aria-hidden="true" class="h-5 w-auto text-gray-300">
+                  <path d="M4.878 4.34H3.551L.27 16.532h1.327l3.281-12.19z" fill="currentColor" />
+                </svg>
+              </div>
+            </li>
+            <li class="text-sm">
+              <span  aria-current="page" class="font-medium cursor-pointer text-gray-500 hover:text-gray-600">{data?.name}</span>
+            </li>
+          </ol>
+        </nav> -->
+      <div
+        class="lg:col-gap-12 xl:col-gap-16 mt-8 grid grid-cols-1 gap-12 lg:mt-12 lg:grid-cols-5 lg:gap-16"
+      >
+        <div class="lg:col-span-3 lg:row-end-1">
+          <Images client:load data={data} />
+        </div>
+
+        <div class="lg:col-span-2 lg:row-span-2 lg:row-end-2">
+          <h1 class="sm: text-2xl font-bold text-gray-900 sm:text-3xl">
+            {data?.name}
+          </h1>
+          <p class="ml-2 mt-5 -mb-5 text-sm font-medium text-gray-500">
+            {data?.stock}
+            <span class="lowercase"
+              >{data?.unit}{(data?.stock ?? 0) > 1 && "s"}</span
+            > disponible{(data?.stock ?? 0) > 1 && "s"}
+          </p>
+
+          <div class="mt-5 flex items-center">
+            <div class="flex items-center">
+              <!-- {[...Array(Math.round(data?.rating.rate))].map((star) => {
+              return (
+                <svg class="block h-4 w-4 align-middle text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" class=""></path>
+                </svg>
+              );
+            })} -->
+            </div>
+            <p class="ml-2 text-sm font-medium text-gray-500">
+              SKU:
+              <span>{data?.SKU}</span>
+            </p>
+          </div>
+          <h2 class="mt-8 text-base font-medium text-gray-900">Marca</h2>
+          <div class="mt-3 flex select-none flex-wrap items-center gap-1">
+            <label class="">
+              <input
+                type="radio"
+                name="type"
+                value="Powder"
+                class="peer sr-only"
+                checked
+              />
+              <p
+                class="peer-checked:bg-black peer-checked:text-white rounded-lg border border-black px-6 py-2 font-bold"
+              >
+                {data?.brand}
+              </p>
+            </label>
+            <!--  <label class="">
+            <input type="radio" name="type" value="Whole Bean" class="peer sr-only" />
+            <p class="peer-checked:bg-black peer-checked:text-white rounded-lg border border-black px-6 py-2 font-bold">Whole Bean</p>
+          </label>
+          <label class="">
+            <input type="radio" name="type" value="Groud" class="peer sr-only" />
+            <p class="peer-checked:bg-black peer-checked:text-white rounded-lg border border-black px-6 py-2 font-bold">Groud</p>
+          </label> -->
+          </div>
+
+          <!-- <h2 class="mt-8 text-base text-gray-900">Choose subscription</h2> -->
+          <div class="mt-3 select-none flex-wrap items-center gap-1">
+            <h2 class="mt-8 text-base font-medium text-gray-900">General</h2>
+            <p class="text-sm">
+              {data?.shortDescription}
+            </p>
+            <!-- <label class="">
+            <input type="radio" name="subscription" value="4 Months" class="peer sr-only" />
+            <p class="peer-checked:bg-black peer-checked:text-white rounded-lg border border-black px-6 py-2 font-bold">4 Months</p>
+            <span class="mt-1 block text-center text-xs">$80/mo</span>
+          </label>
+          <label class="">
+            <input type="radio" name="subscription" value="8 Months" class="peer sr-only" checked />
+            <p class="peer-checked:bg-black peer-checked:text-white rounded-lg border border-black px-6 py-2 font-bold">8 Months</p>
+            <span class="mt-1 block text-center text-xs">$60/mo</span>
+          </label>
+          <label class="">
+            <input type="radio" name="subscription" value="12 Months" class="peer sr-only" />
+            <p class="peer-checked:bg-black peer-checked:text-white rounded-lg border border-black px-6 py-2 font-bold">12 Months</p>
+            <span class="mt-1 block text-center text-xs">$40/mo</span>
+          </label> -->
+          </div>
+
+          <h2 class="mt-8 text-base font-medium text-gray-900">
+            Especificaciones
+          </h2>
+          <div class="relative overflow-x-auto">
+            <table
+              class="w-full text-sm text-left text-gray-500 dark:text-gray-400"
+            >
+              <tbody>
+                <tr
+                  class="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                >
+                  <th
+                    scope="row"
+                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                  >
+                    Dimensiones
+                  </th>
+                  <td class="px-6 py-4">
+                    {data?.length} cm x {data?.width} cm x {data?.height} cm
+                  </td>
+                </tr>
+                <tr
+                  class="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                >
+                  <th
+                    scope="row"
+                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                  >
+                    Peso
+                  </th>
+                  <td class="px-6 py-4">
+                    {data?.weight && data?.weight / 1000} kg
+                  </td>
+                </tr>
+                <tr
+                  class="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                >
+                  <th
+                    scope="row"
+                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                  >
+                    Tipo
+                  </th>
+                  <td class="px-6 py-4">
+                    {data?.type}
+                  </td>
+                </tr>
+                <tr class="bg-white dark:bg-gray-800">
+                  <th
+                    scope="row"
+                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                  >
+                    Modelo
+                  </th>
+                  <td class="px-6 py-4">
+                    {data?.model}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {
+            (data?.parts.length ?? 0) > 0 ? (
+              <PartsProduct
+                data={data}
+                discount={userData?.role?.discount || 0}
+                client:load
+              />
+            ) : (
+              <div class="mt-10 flex flex-col items-center justify-between space-y-4 border-b border-t py-4 sm:flex-row sm:space-y-0">
+                <div class="static flex items-end">
+                  <div>
+                    <h1 class="mr-2 text-2xl font-bold">
+                      ${" "}
+                      {(
+                        ((data?.price ?? 0) -
+                          (data?.price ?? 0) *
+                            ((userData?.role?.discount || 0) / 10000)) /
+                        100
+                      )
+                        .toFixed(2)
+                        .toString()
+                        .replace(/,/g, "")
+                        .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                      <span class="text-base font-normal">
+                        {data?.currency}
+                      </span>
+                    </h1>
+                    <p class="ml-2 line-through">
+                      {data?.suggestedPrice &&
+                        "$" +
+                          (data?.suggestedPrice / 100)
+                            .toFixed(2)
+                            .toString()
+                            .replace(/,/g, "")
+                            .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                    </p>
+                  </div>
+                </div>
+                <AddToCartForm item={data} client:load>
+                  <button
+                    type="submit"
+                    id="alert"
+                    class="inline-flex items-center justify-center rounded-md border-2 border-transparent bg-gray-900 bg-none px-8 py-3 text-center text-base font-bold text-white transition-all duration-200 ease-in-out hover:bg-gray-800 focus:shadow lg:ml-6"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="mr-3 h-5 w-5 shrink-0 lg:sr-only xl:not-sr-only xl:mr-3 xl:h-5 xl:w-5 xl:shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                      />
+                    </svg>
+                    A&ntildeadir al carrito
+                  </button>
+                </AddToCartForm>
+              </div>
+            )
+          }
+
+          <ul class="mt-8 space-y-2">
+            <li
+              class="flex items-center text-left text-sm font-medium text-gray-600"
+            >
+              <svg
+                class="mr-2 block h-5 w-5 align-middle text-gray-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  class=""></path>
+              </svg>
+              Envíos sin costo en compras mayores a $2,000 MXN
+            </li>
+
+            <li
+              class="flex items-center text-left text-sm font-medium text-gray-600"
+            >
+              <svg
+                class="mr-2 block h-5 w-5 align-middle text-gray-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  class=""></path>
+              </svg>
+              Cancelación flexible
+            </li>
+          </ul>
+        </div>
+
+        <ProductInfo
+          description={data?.description || null}
+          manual={data?.manual}
+          brochure={data?.brochure}
+          client:load
+        />
+      </div>
+    </div>
+  </section>
+  {
+    (data?.complements.length ?? 0) > 0 && (
+      <ComplementProduct
+        client:load
+        product={data}
+        data={data?.complements}
+        discount={userData?.role?.discount}
+      />
+    )
+  }
+  {
+    (data?.relations.length ?? 0) > 0 && (
+      <div class="flex justify-start bg-white">
+        <div class="max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
+          <div class="md:flex md:items-center md:justify-between">
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900">
+              Productos relacionados
+            </h2>
+            {/*   <a
+              href="#"
+              class="hidden text-sm font-medium text-indigo-600 hover:text-indigo-500 md:block"
+            >
+              Ver más
+              <span aria-hidden="true"> &rarr;</span>
+         </a>*/}
+          </div>
+
+          <div class="mt-6 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-4 md:gap-y-0 lg:gap-x-8">
+            {data?.relations.map((p) => (
+              <>
+                <div class="group relative">
+                  <div class="h-56 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75 lg:h-72 xl:h-80">
+                    <img
+                      src={`https://d26xfdx1w8q2y3.cloudfront.net/${p.relation.image.path}/${p.relation.image.original}`}
+                      alt="Hand stitched, orange leather long wallet."
+                      class="h-full w-full object-cover object-center"
+                    />
+                  </div>
+                  <h3 class="mt-4 text-sm text-gray-700">
+                    <a href={`/${p.relation.slug}`}>
+                      <span class="absolute inset-0" />
+                      {p.relation?.name}
+                    </a>
+                  </h3>
+                  <p class="mt-1 text-sm text-gray-500">Natural</p>
+                  <p class="mt-1 text-sm font-medium text-gray-900">
+                    {" "}
+                    $
+                    {
+                      // (p.relation?.price / 100)
+                      (
+                        (p.relation?.price -
+                          p.relation?.price *
+                            ((userData?.role?.discount || 0) / 10000)) /
+                        100
+                      )
+                        .toFixed(2)
+                        .toString()
+                        .replace(/,/g, "")
+                        .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                    }
+                  </p>
+                </div>
+              </>
+            ))}
+          </div>
+
+          {/*         <div class="mt-8 text-sm md:hidden">
+            <a
+              href="#"
+              class="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Ver más
+              <span aria-hidden="true"> &rarr;</span>
+            </a>
+          </div>*/}
+        </div>
+      </div>
+    )
+  }
+</Layout>

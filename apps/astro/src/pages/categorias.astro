@@ -1,0 +1,101 @@
+---
+import { api } from "~/utils/api";
+import Layout from "~/layouts/Layout.astro";
+
+const category = await api.category.all.query();
+export const prerender = true;
+---
+
+<Layout title="Categorías">
+  <main class="pb-24">
+    <div class="px-4 py-16 text-center sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-bold tracking-tight text-gray-900">
+        Categorías
+      </h1>
+      <p class="mx-auto mt-4 max-w-xl text-base text-gray-500">
+        Todas las categorías ICB.
+      </p>
+    </div>
+
+    <!-- Product grid -->
+    <section
+      aria-labelledby="products-heading"
+      class="mx-auto max-w-7xl border-t overflow-hidden sm:px-6 lg:px-8"
+    >
+      <h2 id="products-heading" class="sr-only">Categorías</h2>
+
+      <div
+        class="-mx-px grid grid-cols-2 border-l border-gray-200 sm:mx-0 md:grid-cols-3 lg:grid-cols-4"
+      >
+        {
+          category.map((category) => (
+            <div class="group relative border-b border-r border-gray-200 p-4 sm:p-6">
+              <div class="overflow-contain aspect-square w-full rounded-lg bg-gray-200 group-hover:opacity-75">
+                <img
+                  src={
+                    category.image
+                      ? `https://d26xfdx1w8q2y3.cloudfront.net/${category.image?.path}/${category.image?.original}`
+                      : "../../public/images/Logo-cubo-ICB-150x150px.png"
+                  }
+                  alt={category.image?.alt}
+                  class={
+                    category.image
+                      ? "h-full w-full object-contain object-center p-4"
+                      : "h-full w-full object-contain object-center p-16"
+                  }
+                />
+              </div>
+              <div class="pb-4 pt-10 text-center">
+                <h3 class="text-sm font-medium text-gray-900">
+                  <a href={`/${category.slug}`}>
+                    <span aria-hidden="true" class="absolute inset-0" />
+                    {category.name}
+                  </a>
+                </h3>
+              </div>
+            </div>
+          ))
+        }
+
+        <!-- More products... -->
+      </div>
+    </section>
+  </main>
+  <!-- <div class="mt-4">
+    <div class="-my-2">
+      <div
+        class="relative box-content h-80 overflow-x-auto py-2 xl:overflow-visible"
+      >
+        <div
+          class="absolute flex space-x-8 px-4 sm:px-6 lg:px-8 xl:relative xl:grid xl:grid-cols-5 xl:gap-x-8 xl:space-x-0 xl:px-0"
+        >
+          {
+            category.map((category) => (
+              <a
+                href={`/productos/categorias/${category.slug}`}
+                class="relative flex h-80 w-56 flex-col overflow-hidden rounded-lg border p-6 hover:opacity-75 xl:w-auto"
+              >
+                <span aria-hidden="true" class="absolute inset-0">
+                  {category && category.image && (
+                    <img
+                      src={`https://d26xfdx1w8q2y3.cloudfront.net/${category.image.path}/${category.image.original}`}
+                      alt=""
+                      class="h-full w-full object-cover object-center"
+                    />
+                  )}
+                </span>
+                <span
+                  aria-hidden="true"
+                  class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-gray-800 opacity-50"
+                />
+                <span class="relative mt-auto text-center text-xl font-bold text-white [text-shadow:_2px_2px_2px_rgb(0_0_0_/_100%)]">
+                  {category.name}
+                </span>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div> -->
+</Layout>
