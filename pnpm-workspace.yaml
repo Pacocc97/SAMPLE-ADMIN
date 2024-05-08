@@ -1,0 +1,7 @@
+packages:
+  - apps/astro
+  - apps/nextjs
+  - packages/api
+  - packages/auth
+  - packages/db
+  - packages/config/*
