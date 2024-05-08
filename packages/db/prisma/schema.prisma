@@ -1,0 +1,476 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String  @unique
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id             String           @id @default(cuid())
+  name           String?
+  email          String?          @unique
+  emailVerified  DateTime?
+  openPayId      String?
+  password       String?
+  contactMails   String[]
+  contactPhones  String[]
+  image          String?
+  address        Address[]
+  disable        Boolean?
+  picture        Image?           @relation(fields: [pictureId], references: [id], onDelete: SetNull)
+  pictureId      String?
+  role           Role?            @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  roleId         String?
+  accounts       Account[]
+  sessions       Session[]
+  openPayData    OpenPayData[]
+  ProductHistory ProductHistory[]
+  createdAt      DateTime         @default(now())
+  deletedAt      DateTime?
+  userCommenting UserComment[]    @relation("commenting")
+  userCommented  UserComment[]    @relation("commented")
+  quotation      Quotation[]
+}
+
+model Role {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  type        String
+  discount    Int?
+  hierarchy   Int?
+  user        User[]
+  permissions RolePermissions[]
+}
+
+model Permission {
+  id    String            @id @default(cuid())
+  name  String            @unique
+  roles RolePermissions[]
+}
+
+model RolePermissions {
+  role         Role       @relation(fields: [roleId], references: [id])
+  roleId       String
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  permissionId String
+  assignedAt   DateTime   @default(now())
+
+  @@id([roleId, permissionId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Image {
+  id             String           @id @default(cuid())
+  path           String
+  original       String           @unique
+  webp           String
+  blur           String
+  width          Int
+  height         Int
+  alt            String?
+  // To return `Date`s intact through the API we need to add data transformers
+  // https://trpc.io/docs/data-transformers
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now()) @updatedAt
+  Product        Product[]        @relation("image")
+  ImagesExtra    ImagesExtra[]
+  BlogCategory   BlogCategory[]
+  Producer       Producer[]
+  User           User[]
+  Category       Category[]
+  ProductPackage ProductPackage[]
+  Seo            Seo[]
+  Blog           Blog[]
+}
+
+model Product {
+  id               String              @id @default(cuid())
+  name             String
+  description      String?
+  shortDescription String?
+  brand            String?
+  currency         String?
+  slug             String              @unique
+  imageId          String
+  image            Image               @relation("image", fields: [imageId], references: [id])
+  SKU              String?
+  model            String?
+  stock            Int
+  stockWarn        Int
+  Category         Category[]
+  producer         ProducerOfProduct[]
+  price            Int
+  height           Int?
+  width            Int?
+  length           Int?
+  weight           Int?
+  attributes       Json?
+  tags             String[]
+  barcode          String?
+  suggestedPrice   Int?
+  ImagesExtra      ImagesExtra[]
+  Gif              Gif?                @relation(fields: [gifId], references: [id])
+  gifId            String?
+  brochureId       String?
+  brochure         Pdf?                @relation("brochure", fields: [brochureId], references: [id])
+  manualId         String?
+  manual           Pdf?                @relation("manual", fields: [manualId], references: [id])
+  type             String?
+  ProductType      ProductType?        @relation(fields: [type], references: [name])
+  unit             String?
+  ProductUnit      ProductUnit?        @relation(fields: [unit], references: [name])
+  productPackage   String?
+  ProductPackage   ProductPackage?     @relation(fields: [productPackage], references: [id])
+  complements      ProductComplement[] @relation("main")
+  complementOf     ProductComplement[] @relation("complement")
+  relations        ProductRelation[]   @relation("based")
+  relationOf       ProductRelation[]   @relation("relation")
+  parts            ProductParts[]      @relation("default")
+  partsOf          ProductParts[]      @relation("parts")
+  seo              Seo?
+
+  //HISTORIAL
+  ProductHistory ProductHistory[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now()) @updatedAt
+  deletedAt      DateTime?
+  //APROBADO
+  approval       String[]
+  //ORDEN
+  orders         OrderProduct[]
+}
+
+model Seo {
+  id                               String          @id @unique @default(cuid())
+  title                            String?
+  descriptionMeta                  String?
+  canonical                        String?
+  noindex                          Boolean?
+  nofollow                         Boolean?
+  charset                          String?
+  openGraphBasicTitle              String?
+  openGraphBasicType               String?
+  openGraphBasicImageId            String?
+  openGraphBasicImage              Image?          @relation(fields: [openGraphBasicImageId], references: [id])
+  openGraphBasicUrl                String?
+  openGraphOptionalAudio           String?
+  openGraphOptionalDescription     String?
+  openGraphOptionalDeterminer      String?
+  openGraphOptionalLocale          String?
+  openGraphOptionalLocaleAlternate String?
+  openGraphOptionalSiteName        String?
+  openGraphOptionalVideo           String?
+  openGraphImageUrl                String?
+  openGraphImageSecureUrl          String?
+  openGraphImageType               String?
+  openGraphImageWidth              Int?
+  openGraphImageHeight             Int?
+  openGraphImageAlt                String?
+  openGraphArticleAuthor           String?
+  openGraphArticleSection          String?
+  openGraphArticleTags             String[]
+  twitterCard                      String?
+  twitterSite                      String?
+  twitterCreator                   String?
+  openGraphArticlePublishedTime    DateTime?       @default(now())
+  openGraphArticleModifiedTime     DateTime?       @default(now()) @updatedAt
+  openGraphArticleExpirationTime   DateTime?
+  ProductPackage                   ProductPackage? @relation(fields: [packageId], references: [id])
+  packageId                        String?         @unique
+  Category                         Category?       @relation(fields: [categoryId], references: [id])
+  categoryId                       String?         @unique
+  BlogCategory                     BlogCategory?   @relation(fields: [blogCategoryId], references: [id])
+  blogCategoryId                   String?         @unique
+  Product                          Product?        @relation(fields: [productId], references: [id])
+  productId                        String?         @unique
+  Blog                             Blog?           @relation(fields: [blogId], references: [id])
+  blogId                           String?         @unique
+}
+
+model Category {
+  id              String     @id @default(cuid())
+  name            String
+  slug            String     @unique
+  characteristics Json?
+  parentId        String?
+  description     String?
+  imageId         String?
+  image           Image?     @relation(fields: [imageId], references: [id])
+  seo             Seo?
+  parent          Category?  @relation("Relacion", fields: [parentId], references: [id])
+  child           Category[] @relation("Relacion")
+  Product         Product[]
+}
+
+model ImagesExtra {
+  orden      Int?
+  image      Image    @relation(fields: [imageId], references: [id])
+  imageId    String
+  Product    Product  @relation(fields: [productId], references: [id])
+  productId  String
+  assignedAt DateTime @default(now())
+
+  @@id([imageId, productId])
+}
+
+model ProductType {
+  name    String    @unique
+  Product Product[]
+}
+
+model ProductUnit {
+  name    String    @unique
+  Product Product[]
+}
+
+model Gif {
+  id        String    @id @default(cuid())
+  path      String
+  original  String
+  width     Int
+  height    Int
+  alt       String?
+  Product   Product[]
+  // To return `Date`s intact through the API we need to add data transformers
+  // https://trpc.io/docs/data-transformers
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+}
+
+model Pdf {
+  id              String     @id @default(cuid())
+  path            String
+  original        String
+  productBrochure Product[]  @relation("brochure")
+  productManual   Product[]  @relation("manual")
+  quotation       Quotation?
+  // To return `Date`s intact through the API we need to add data transformers
+  // https://trpc.io/docs/data-transformers
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @default(now()) @updatedAt
+}
+
+model ProductHistory {
+  id        Int      @default(autoincrement())
+  Product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId    String?
+  type      String
+  date      DateTime @default(now())
+
+  @@id([productId, id])
+}
+
+model Producer {
+  id         String              @id @default(cuid())
+  name       String
+  slug       String              @unique
+  logo       Image?              @relation(fields: [logoId], references: [id])
+  logoId     String?
+  emails     String[]
+  phones     String[]
+  webSite    String?
+  categories String[]
+  product    ProducerOfProduct[]
+  location   String
+}
+
+model ProducerOfProduct {
+  producer   Producer @relation(fields: [producerId], references: [id])
+  producerId String // relation scalar field (used in the `@relation` attribute above)
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  String // relation scalar field (used in the `@relation` attribute above)
+  delivery   Int?
+  price      Int?
+
+  @@id([productId, producerId])
+}
+
+model ProductComplement {
+  productId    String
+  complementId String
+  product      Product @relation(name: "main", fields: [productId], references: [id])
+  complement   Product @relation(name: "complement", fields: [complementId], references: [id])
+
+  @@id([productId, complementId])
+}
+
+model ProductRelation {
+  productId  String
+  relationId String
+  product    Product @relation(name: "based", fields: [productId], references: [id])
+  relation   Product @relation(name: "relation", fields: [relationId], references: [id])
+
+  @@id([productId, relationId])
+}
+
+model ProductParts {
+  productId String
+  partsId   String
+  product   Product @relation(name: "default", fields: [productId], references: [id])
+  parts     Product @relation(name: "parts", fields: [partsId], references: [id])
+
+  @@id([productId, partsId])
+}
+
+model UserComment {
+  id             String        @unique @default(cuid())
+  comment        String
+  commentingId   String
+  commentedId    String
+  parentId       String?
+  child          UserComment[] @relation("relacion")
+  parent         UserComment?  @relation("relacion", fields: [parentId], references: [id])
+  userCommenting User?         @relation(name: "commenting", fields: [commentingId], references: [id], onDelete: Cascade)
+  userCommented  User?         @relation(name: "commented", fields: [commentedId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+
+  @@id([commentedId, id])
+}
+
+model ProductPackage {
+  id               String    @id @default(cuid())
+  slug             String    @unique
+  name             String
+  price            Int
+  description      String?
+  shortDescription String?
+  products         Product[]
+  image            Image?    @relation(fields: [imageId], references: [id])
+  imageId          String?
+  seo              Seo?
+}
+
+model Blog {
+  id               String         @id @default(cuid())
+  title            String
+  slug             String         @unique
+  tags             String[]
+  draft            Boolean
+  shortDescription String?
+  description      String?
+  BlogCategory     BlogCategory[]
+  seo              Seo?
+  image            Image?         @relation(fields: [imageId], references: [id])
+  imageId          String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  publishedAt      DateTime?
+  published        Boolean?
+  deletedAt        DateTime?
+}
+
+model BlogCategory {
+  id          String         @id @default(cuid())
+  name        String
+  slug        String         @unique
+  parentId    String?
+  description String?
+  imageId     String?
+  image       Image?         @relation(fields: [imageId], references: [id])
+  seo         Seo?
+  parent      BlogCategory?  @relation("Relacion", fields: [parentId], references: [id])
+  child       BlogCategory[] @relation("Relacion")
+  Blog        Blog[]
+}
+
+model OpenPayData {
+  id        String  @id @default(cuid())
+  paymentId String
+  discount  Int?
+  status    String?
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  order     Order?
+}
+
+model Order {
+  id              String         @id @unique @default(cuid())
+  products        OrderProduct[]
+  openPay         OpenPayData?   @relation(fields: [openPayId], references: [id])
+  openPayId       String?        @unique
+  totalPrice      Int?
+  shippingAddress Json
+  billingAddress  Json
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @default(now()) @updatedAt
+  deletedAt       DateTime?
+}
+
+model Quotation {
+  id         String         @id @unique @default(cuid())
+  pdf        Pdf?           @relation(fields: [pdfId], references: [id])
+  pdfId      String?        @unique
+  discount   Int?
+  products   OrderProduct[]
+  totalPrice Int?
+  userId     String?
+  user       User?          @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  createdAt  DateTime       @default(now())
+}
+
+model OrderProduct {
+  id           String     @id @default(cuid())
+  product      Product    @relation(fields: [productId], references: [id])
+  productId    String // relation scalar field (used in the `@relation` attribute above)
+  order        Order?     @relation(fields: [orderId], references: [id])
+  orderId      String? // relation scalar field (used in the `@relation` attribute above)
+  quantity     Int
+  currentPrice Int
+  quotation    Quotation? @relation(fields: [quotationId], references: [id])
+  quotationId  String?
+}
+
+model Address {
+  id              String  @id @default(cuid())
+  user            User?   @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  userId          String?
+  identifier      String?
+  finality        String? //billing or shipping 
+  street          String
+  apartmentNumber String?
+  streetNumber    String
+  neighborhood    String
+  municipality    String
+  state           String
+  postalCode      String
+}

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Address" ALTER COLUMN "finality" DROP NOT NULL,
+ALTER COLUMN "userId" DROP NOT NULL;
